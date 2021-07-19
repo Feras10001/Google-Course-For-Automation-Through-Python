@@ -1,0 +1,18 @@
+#! /usr/bin/env python3
+
+import os
+import requests
+
+directory = '/data/feedback/'
+
+for file in os.listdir(directory):
+ if file.endswith('.txt'):
+  with open(directory + file) as f:
+   info = f.read().split('\n')
+   FB = {'title':info[0], 'name':info[1], 'date':info[2], 'feedback':info[3]}
+ url = 'http://104.198.190.62/feedback/'
+ response = requests.post(url, data = FB)
+ if response.ok == True:
+  print('{}'.format(response.status_code))
+ else:
+  response.raise_for_status()
