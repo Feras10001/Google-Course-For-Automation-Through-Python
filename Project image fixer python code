@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+from PIL import Image
+import os
+import shutil
+source = os.path.expanduser('~') + '/images/'
+target = '/opt/icons/'
+
+for file in os.listdir(source):
+ if not file.startswith('.'):
+  im = Image.open(source + file)
+  newsize = (128, 128)
+ #base = os.path.splitext(file)[0]
+ #filename = os.rename(file, base + '.jpg')
+  new = im.rotate(90).convert('RGB').resize(newsize).save(target + file + '.jpg', "JPEG")
+ #shutil.move(os.path.join(source, new), target)
