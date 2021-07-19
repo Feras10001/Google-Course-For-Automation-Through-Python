@@ -1,0 +1,149 @@
+ #!/usr/bin/env python3
+
+from PIL import Image
+import os
+
+source = os.path.expanduser('~') + '/supplier-data/images/'
+
+for file in os.listdir(source):
+ if file.endswith('.tiff'):
+  im = Image.open(source + file)
+  newsize = (600, 400)
+  base = os.path.splitext(file)[0]
+  new = im.convert('RGB').resize(newsize).save(source + base + ".jpeg" , "JPEG")
+------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+#!/usr/bin/env python3
+
+import requests
+import os
+
+source =  'supplier-data/images/'
+
+url = 'http://localhost/upload/'
+for file in os.listdir(source):
+ if file.endswith('.jpeg'):
+  with open(source + file, 'rb') as target:
+   r = requests.post(url, files={'file': target})
+------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
+#!/usr/bin/env python3
+
+from PIL import Image
+import  os
+import requests
+
+directory = 'supplier-data/descriptions/'
+
+for file2 in os.listdir(directory):
+  if file2.endswith('.txt'):
+      with open(file2) as f:
+       info = f.read().split('\n')
+       base = os.path.splitext(file2)[0]
+       FB = {'name':info[0], 'weight':int(info[1].split(" ")[0]), 'description':info[2], 'image_name':base + ".jpeg"}
+  url = 'http://localhost/fruits/'
+  response = requests.post(url, data = FB)
+  if response.ok == True:
+   print('{}'.format(response.status_code))
+  else:
+   response.raise_for_status()
+
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+#!/usr/bin/env python3
+
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus import Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+
+def generate_report(filename, title, info):
+    styles = getSampleStyleSheet()
+    report = SimpleDocTemplate(filename)
+    report_title = Paragraph(title, styles["h1"])
+    report_info = Paragraph(info, styles["BodyText"])
+    empty_line = Spacer(1,20)
+
+    report.build([report_title, empty_line, report_info, empty_line])
+-----------------------------------------------------------------------------
+------------------------------------------------------------------------------
+#!/usr/bin/env python3
+
+import email.message
+import mimetypes
+import os.path
+import smtplib
+
+def generate_email(sender, recipient, subject, body, attachment_path = None):
+  """Generate email, default is with no attachment"""
+  # Basic Email formatting
+  message = email.message.EmailMessage()
+  message['Subject'] = subject
+  message['From'] = sender
+  message['To'] = recipient
+  message.set_content(body)
+
+  if attachment_path != None:
+    attachment_name = os.path.basename(attachment_path)
+    mime_type, _ = mimetypes.guess_type(attachment_path)
+    mime_type, mime_subtype = mime_type.split("/", 1)
+    with open(attachment_path, 'rb') as fp:
+      message.add_attachment(fp.read(),
+                            maintype=mime_type,
+                            subtype=mime_subtype,
+                            filename=attachment_name)
+  return message
+
+def send_email(package):
+  """Sends the email package to the configured SMTP server."""
+  mail_server = smtplib.SMTP('localhost')
+  mail_server.send_message(package)
+  mail_server.quit()
+
+  -----------------------------------------------------------------------------------
+
+  #!/usr/bin/env python3
+
+  import os, datetime
+  import reports
+  import emails
+
+  #get the current time in GMT
+  current_date = datetime.datetime.now().strftime('%Y-%m-%d')
+
+
+
+  def summary(path):
+   directory = path
+   dic = {}
+   disc = ""
+   for file in os.listdir(directory):
+      if file.endswith('.txt'):
+          with open(directory + file) as f:
+              info = f.read().split('\n')
+              name = info[0]
+              weight = info[1]
+              disc += "name: " + name + "<br/>" + "weight: " + weight + "<br/>""<br/>"
+   return disc
+
+
+
+if __name__ == "__main__":
+  path = "supplier-data/descriptions/"
+  title = "Process Updated on " + current_date
+  #generate the package for pdf body
+  package = summary("supplier-data/descriptions/")
+  new_summary = '<br/>'.join(summary)
+  reports.generate_report("/tmp/processed.pdf", title, package)
+
+  #generate email information
+  sender = "automation@example.com"
+  receiver = "{}@example.com".format(os.environ["USER"])
+  subject = "Upload Completed - Online Fruit Store"
+  body = "All fruits are uploaded to our website successfully. A detailed list is attached to this email."
+  attachment = "/tmp/processed.pdf"
+
+  #generate email for the online fruit store report and pdf attachment
+  message = emails.generate_email(sender, receiver, subject, body, attachment)
+  emails.send_email(message)
+
+  -------------------------------------------------------------------------------
